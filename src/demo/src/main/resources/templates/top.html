@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<meta charset="UTF-8">
+<script>
+	window.onload = () => {
+		document.getElementById("gettext").addEventListener("click", () => {
+			const url = getAddress() + "api/get";
+			var apiKey = document.getElementById("apikey").value;
+			fetch(url,{
+				method: 'get',
+				headers: {
+					'API-KEY': apiKey
+				}
+			})
+			.then(response => {
+				if (response.ok) {
+					return (response.text()).then(text => {
+						document.getElementById("result").innerHTML = text;
+					});
+				}
+			})
+		});	
+		document.getElementById("upload").addEventListener("click", () => {
+			// 選択したファイルを読み込む
+			const fd = new FormData();
+			const fo = document.getElementById("filename");
+			fd.append("filedata", fo.files[0]);
+			const fi = {
+				"type": fo.files[0].type,
+				"name": fo.files[0].name
+			};
+			fd.append("fileinfo", new Blob([JSON.stringify(fi)], {type: 'application/json'}));
+//	これはエラーになる
+//			fd.append("fileinfo", JSON.stringify(fi));
+			const url = getAddress() + "api/upload";
+			fetch(url, {
+				method: 'post',
+				body: fd				
+			})
+			.then(response => {
+				if (response.ok) {
+					return (response.json()).then(json => {
+						document.getElementById("result").innerHTML= JSON.stringify(json);
+					})
+				}
+				else {
+					console.log(response.status);
+				}
+			})
+			.catch(error => {
+				console.log(error);
+			})
+		})
+		document.getElementById("download").addEventListener("click", () =>{
+			const url = getAddress() + "api/download";
+			
+			fetch(url, {
+				method: 'get',
+			})
+			.then (response=> {
+				if (response.ok) {
+					const contentType = response.headers.get("Content-Type");
+					switch (contentType) {
+						case 'text/xml':
+							break;
+						default:
+							break;
+					}
+					return (response.blob()).then(blob => {
+						const canvas = document.getElementById("cnv");
+						const context = canvas.getContext("2d");
+						
+						const image = new Image();
+						image.onload = () => {
+							canvas.width = image.width;
+							canvas.height = image.height;
+							context.drawImage(image, 0, 0, canvas.width, canvas.height);
+						};
+						image.src = URL.createObjectURL(blob);
+					})
+				}
+			})
+		})
+		document.getElementById("downtext").addEventListener("click", () =>{
+			const url = getAddress() + "api/download?type=text";
+			
+			fetch(url, {
+				method: 'get',
+			})
+			.then (response=> {
+				if (response.ok) {
+					const contentType = response.headers.get("Content-Type");
+					switch (contentType) {
+						case 'text/xml':
+							break;
+						default:
+							break;
+					}
+					return (response.text()).then(text => {
+						document.getElementById("result").innerHTML = text;
+					})
+				}
+			})
+		})
+		document.getElementById("notfound").addEventListener("click", () =>{
+			const url = getAddress() + "api/notfound";
+			
+			fetch(url, {
+				method: 'get',
+			})
+			.then (response=> {
+				if (response.ok) {
+				}
+			})
+		})
+		document.getElementById("error").addEventListener("click", () =>{
+			const url = getAddress() + "api/error";
+			
+			fetch(url, {
+				method: 'get',
+			})
+			.then (response=> {
+				if (response.ok) {
+				}
+			})
+		})
+		document.getElementById("cert").addEventListener("click", () =>{
+			const url = getAddress() + "api/certificate";
+			var certKey = document.getElementById("certificate").value;
+			fetch(url,{
+				method: 'get',
+				headers: {
+					'Authorization': certKey
+				}
+			})
+			.then(response => {
+				if (response.ok) {
+					return (response.text()).then(text => {
+						document.getElementById("result").innerHTML = text;
+					});
+				}
+			})
+		})
+		document.getElementById("mylist").addEventListener("click", () =>{
+			const url = getAddress() + "api/getlist";
+			fetch(url,{
+				method: 'get',
+			})
+			.then(response => {
+				if (response.ok) {
+					return (response.json()).then(json => {
+						document.getElementById("result").innerHTML = JSON.stringify(json);
+					});
+				}
+			})
+		})
+		// ホスト情報を設定する
+		document.getElementById("protocol").value = window.location.protocol;
+		document.getElementById("hostname").value = window.location.hostname;
+		document.getElementById("port").value = window.location.port;
+		document.getElementById("path").value = window.location.pathname;
+	}
+	function getAddress() {
+		return document.getElementById("protocol").value + "//"
+			+ document.getElementById("hostname").value + ":"
+			+ document.getElementById("port").value
+			+ document.getElementById("path").value;
+	}
+</script>
+<title>Insert title here</title>
+</head>
+<body>
+	<fieldset>
+		<legend>ページ情報</legend>
+		<div>
+			<label for="protocol">プロトコル</label><input type="text" id="protocol">
+		</div>
+		<div>
+			<label for="hostname">ホスト名</label><input type="text" id="hostname">
+		</div>
+		<div>
+			<label for="port">ポート</label><input type="text" id="port">
+		</div>
+		<div>
+			<label for="path">パス</label><input type="text" id="path">
+		</div>
+	</fieldset>
+	<fieldset>
+		<div>
+			<label for="apikey">API-KEY</label><input type="text" id="apikey">
+			<button id="gettext">GET(Text)</button>
+		</div>
+		<div>
+			<label for="filename">File</label><input type="file" id="filename">
+			<button id="upload">Upload(File)</button>
+		</div>
+		<div>
+			<label for="certificate">Client</label><input type="text" id="certificate">
+			<button id="cert">認証</button>
+		</div>
+		<div>
+			<button id="mylist">リスト取得</button>
+		</div>
+		<div>
+			<button id="download">Download(image)</button>
+		</div>
+		<div>
+			<button id="downtext">Download(text)</button>
+		</div>
+		<div>
+			<button id="notfound">Not Found(404)</button>
+		</div>
+		<div>
+			<button id="error">Error(404)</button>
+		</div>
+	</fieldset>
+	<div id="result"></div>
+	<div>
+		<canvas id="cnv"></canvas>
+	</div>
+	<p th:text=${message}></p>
+</body>
+</html>
